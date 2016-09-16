@@ -438,7 +438,7 @@ namespace NuBuild
                     if (this.completedVerbs.Contains(parent))
                     {
                         // Wait, if the parent is completed, why is the child a stale dependency?
-                        Util.Assert(false);
+                        //Util.Assert(false);
                     }
 
                     newParents.Add(parent);

@@ -32,6 +32,11 @@ namespace NuBuild
         private const string XmlRelativePathAttribute = "RelativePath";
 
         /// <summary>
+        /// The XML attribute name for the IsCompressed value.
+        /// </summary>
+        private const string XmlIsCompressedAttribute = "IsCompressed";
+
+        /// <summary>
         /// Hash of the contents referenced by the build object.
         /// </summary>
         private string objectHash;
@@ -42,6 +47,12 @@ namespace NuBuild
         private string relativePath;
 
         /// <summary>
+        /// Path to the build object, relative to the IronRoot.
+        /// </summary>
+        private bool isCompressed;
+        
+
+        /// <summary>
         /// Initializes a new instance of the BuildObjectValuePointer class.
         /// </summary>
         /// <param name="objectHash">
@@ -50,10 +61,11 @@ namespace NuBuild
         /// <param name="relativePath">
         /// Path to the build object, relative to the IronRoot.
         /// </param>
-        public BuildObjectValuePointer(string objectHash, string relativePath)
+        public BuildObjectValuePointer(string objectHash, string relativePath, bool isCompressed = false)
         {
             this.objectHash = objectHash;
             this.relativePath = relativePath;
+            this.isCompressed = isCompressed;
         }
 
         /// <summary>
@@ -71,6 +83,16 @@ namespace NuBuild
         {
             get { return this.relativePath; } 
         }
+
+        /// <summary>
+        /// Is the file this points to compressed?
+        /// </summary>
+        public bool IsCompressed
+        {
+            get { return this.isCompressed; }
+        }
+
+
 
         /// <summary>
         /// Helper function to read an XML element (not a full document)
@@ -91,7 +113,8 @@ namespace NuBuild
             Util.Assert(xr.Name.Equals(XmlTag));
             string objectHash = xr.GetAttribute(XmlObjectHashAttribute);
             string relativePath = xr.GetAttribute(XmlRelativePathAttribute);
-            return new BuildObjectValuePointer(objectHash, relativePath);
+            bool isCompressed = xr.GetAttribute(XmlIsCompressedAttribute) == "true";
+            return new BuildObjectValuePointer(objectHash, relativePath, isCompressed: isCompressed);
         }
 
         /// <summary>
@@ -104,6 +127,7 @@ namespace NuBuild
             xw.WriteStartElement(XmlTag);
             xw.WriteAttributeString(XmlObjectHashAttribute, this.objectHash);
             xw.WriteAttributeString(XmlRelativePathAttribute, this.relativePath);
+            xw.WriteAttributeString(XmlIsCompressedAttribute, isCompressed ? "true" : "false");
             xw.WriteEndElement();
         }
     }

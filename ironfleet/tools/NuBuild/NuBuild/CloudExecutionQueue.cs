@@ -34,12 +34,12 @@ namespace NuBuild
         /// <summary>
         /// Name of the request queue.
         /// </summary>
-        private const string RequestQueueName = "requests";
+        private const string RequestQueueName = "mariposa-requests";
 
         /// <summary>
         /// Name of the default report queue.
         /// </summary>
-        private const string ReportQueueName = "reports";
+        private const string ReportQueueName = "mariposa-reports";
 
         /// <summary>
         /// Expiration time for request/report queue entries.
@@ -106,6 +106,7 @@ namespace NuBuild
         /// </remarks>
         public CloudExecutionQueue()
         {
+            Console.WriteLine(RequestQueueName);
             // Work-around for running this code in CloudExecutionEngine.  TODO: Clean this up!
             // The BuildEngine.theEngine.getIronRoot() call needs to work for BuildObject code to function properly.
             if (BuildEngine.theEngine.getIronRoot() == null)
@@ -271,7 +272,18 @@ namespace NuBuild
             }
 
             CloudQueueMessage message = new CloudQueueMessage(report.ToXml());
-            this.cachedServerReportQueue.AddMessage(message, this.queueEntryTtl);
+            try
+            {
+                this.cachedServerReportQueue.AddMessage(message, this.queueEntryTtl);
+            }
+            catch (System.ArgumentException e)
+            {
+                report = new CloudExecutionReport(report.Identifier, report.Status, report.ExitCode, "ERROR", "ERROR",
+                    report.CpuTime, report.OutputFileMappings);
+                message = new CloudQueueMessage(report.ToXml());
+                this.cachedServerReportQueue.AddMessage(message, this.queueEntryTtl);
+            }
+            
         }
 
         /// <summary>
@@ -313,7 +325,16 @@ namespace NuBuild
 
                 // Get a new batch of messages.
                 // No other queue readers will see these until the invisibleTime expires.
-                messages = new List<CloudQueueMessage>(this.clientReportQueue.GetMessages(MaxBatchSize, invisibleTime));
+                try
+                {
+                    messages = new List<CloudQueueMessage>(this.clientReportQueue.GetMessages(MaxBatchSize, invisibleTime));
+                }
+                catch
+                {
+                    Thread.Sleep(invisibleTime + pollInterval + pollInterval);
+                    continue;
+                }
+                
                 anyForUs = false;
 
                 foreach (CloudQueueMessage message in messages)

@@ -30,7 +30,7 @@ namespace CloudExecutionWorker
         /// <summary>
         /// Multiplexed cloud/local implementation of the item cache.
         /// </summary>
-        private IItemCache multiplexedItemCache;
+        private ItemCacheMultiplexer multiplexedItemCache;
 
         /// <summary>
         /// Main queue of client execution requests.
@@ -170,6 +170,10 @@ namespace CloudExecutionWorker
                 // WorkingDirectory and/or ItemCache.
                 string inputFilePath = workingDirectory.PathTo(inputFile.RelativePath);
                 Directory.CreateDirectory(Path.GetDirectoryName(inputFilePath));  // REVIEW: Still neeeded?
+                if (inputFile.IsCompressed)
+                {
+                    container = ItemCacheContainer.CompressedSources;
+                }
                 this.multiplexedItemCache.FetchItemToFile(
                     container,
                     inputFile.ObjectHash,

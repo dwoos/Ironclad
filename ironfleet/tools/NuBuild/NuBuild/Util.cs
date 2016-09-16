@@ -9,6 +9,7 @@ namespace NuBuild
     using System;
     using System.Diagnostics;
     using System.IO;
+    using System.IO.Compression;
     using System.Runtime.Remoting.Metadata.W3cXsd2001;
     using System.Security.Cryptography;
     using System.Text;
@@ -155,6 +156,33 @@ namespace NuBuild
                 }
 
                 Environment.Exit(-1);
+            }
+        }
+
+        public static byte[] Compress(byte[] data)
+        {
+            using (var dataStream = new MemoryStream())
+            {
+                using (var compressedDataStream = new DeflateStream(dataStream, CompressionMode.Compress))
+                {
+                    compressedDataStream.Write(data, 0, data.Length);
+                }
+                return dataStream.ToArray();
+            }
+        }
+
+        public static byte[] Decompress(byte[] data)
+        {
+            using (var dataStream = new MemoryStream(data))
+            {
+                using (var decompressedMemoryStream = new MemoryStream())
+                {
+                    using (var decompressedDataStream = new DeflateStream(dataStream, CompressionMode.Decompress))
+                    {
+                        decompressedDataStream.CopyTo(decompressedMemoryStream);
+                    }
+                    return decompressedMemoryStream.ToArray();
+                }
             }
         }
     }

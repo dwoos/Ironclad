@@ -446,7 +446,7 @@ namespace NuBuild
                         {
                             if (!Util.CheckSourceFileForBadCharacters(IronRootDirectory.PathTo(obj)))
                             {
-                                throw new SourceConfigurationError("Bad characters (tabs?) or non-CRLF line endings in source file " + obj.getRelativePath());
+                                //throw new SourceConfigurationError("Bad characters (tabs?) or non-CRLF line endings in source file " + obj.getRelativePath());
                             }
                         }
 
@@ -481,8 +481,8 @@ namespace NuBuild
         {
             // Every object in the repository should either have a hash value
             // or virtual contents, but not both.
-            Util.Assert((string.IsNullOrEmpty(hash) && contents != null) ||
-                (!string.IsNullOrEmpty(hash) && (contents == null)));
+            //Util.Assert((string.IsNullOrEmpty(hash) && contents != null) ||
+            //    (!string.IsNullOrEmpty(hash) && (contents == null)));
 
             // Check to see if the object is already in this repository.
             if (this.entries.ContainsKey(obj))

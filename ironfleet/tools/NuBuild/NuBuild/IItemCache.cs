@@ -38,7 +38,9 @@ namespace NuBuild
         /// <summary>
         /// Item cache container for unsuccessful result records.
         /// </summary>
-        FailedResults = 3
+        FailedResults = 3,
+
+        CompressedSources = 4
     }
 
     /// <summary>

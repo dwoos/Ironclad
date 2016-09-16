@@ -35,7 +35,9 @@ namespace CloudExecutionWorker
         public override void Run()
         {
             Trace.TraceInformation("CloudExecutionWorker entry point called");
-
+            
+            System.IO.Directory.CreateDirectory(@"D:\nuwork");
+            System.IO.Directory.SetCurrentDirectory(@"D:\nuwork"); 
             this.engine = new CloudExecutionEngine();
 
             // TODO: Multi-thread this.

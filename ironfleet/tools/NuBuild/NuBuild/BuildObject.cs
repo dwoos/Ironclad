@@ -56,6 +56,11 @@ namespace NuBuild
         private string filenameExtension;
 
         /// <summary>
+        /// Whether this object should be compressed before sending over the wire
+        /// </summary>
+        public bool shouldCompress;
+
+        /// <summary>
         /// Initializes a new instance of the BuildObject class.
         /// </summary>
         /// <param name="path">
@@ -65,12 +70,13 @@ namespace NuBuild
         /// Whether this object is considered "trusted" for verification
         /// purposes.
         /// </param>
-        public BuildObject(string path, bool isTrusted = false)
+        public BuildObject(string path, bool isTrusted = false, bool shouldCompress = false)
         {
             // ToDo: Fix VSSolutionVerb and/or IronfleetTestDriver.sln to work in "src" tree without hitting below Assert.  Then re-instate below Assert.
             ////Util.Assert(!path.StartsWith(BuildEngine.theEngine.getSrcRoot(), StringComparison.OrdinalIgnoreCase));
             this.path = BuildEngine.theEngine.normalizeIronPath(path);
             this.isTrusted = isTrusted;
+            this.shouldCompress = shouldCompress;
         }
 
         /// <summary>
@@ -208,6 +214,23 @@ namespace NuBuild
         }
 
         /// <summary>
+        /// Creates a new instance based on this one, but with the given
+        /// filename, and guaranteed to be in the obj directory.
+        /// </summary>
+        /// <param name="extension">Extension to give new instance.</param>
+        /// <returns>A new instance.</returns>
+        public BuildObject makeOutputObjectWithFilename(string filename)
+        {
+            return new BuildObject(this.mashedPathnameWithFilename(BuildEngine.theEngine.getObjRoot(), filename));
+        }
+
+        public BuildObject makeOutputObjectWithDirname(string dirname)
+        {
+            return new BuildObject(this.mashedPathnameWithDirname(BuildEngine.theEngine.getObjRoot(), dirname, this.getFileName()));
+        }
+
+
+        /// <summary>
         /// Creates a new instance based on this one, but for the given
         /// appLabel (REVIEW: what does this mean?), with the given
         /// extension, and guaranteed to be in the obj directory.
@@ -327,6 +350,19 @@ namespace NuBuild
             filename = Util.dafnySpecMungeName(filename);
 
             return Path.Combine(root, this.getDirRelativeToSrcOrObj(), filename + extension);
+        }
+
+        private string mashedPathnameWithFilename(string root, string filename)
+        {
+            return Path.Combine(root, this.getDirRelativeToSrcOrObj(), filename);
+        }
+        private string mashedPathnameWithDirname(string root, string dirname, string filename)
+        {
+            string dir = this.getDirRelativeToSrcOrObj();
+            int slash = dir.IndexOf('\\');
+            Util.Assert(slash >= 0);
+            dir = dir.Substring(slash + 1);
+            return Path.Combine(root, dirname, dir, filename);
         }
 
         /// <summary>

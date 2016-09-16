@@ -223,6 +223,53 @@ namespace NuBuild
                     {
                         verbs.Add(new BootableAppVerb(conditionSourcePath(target), this.useFramePointer, this.verificationRequest));
                     }
+                    else if (verb.Equals("Z3"))
+                    {
+                        verbs.Add(new Z3Verb(conditionSourcePath(target)));
+                    }
+                    else if (verb.Equals("BatchZ3"))
+                    {
+                        verbs.Add(new BatchZ3Verb(conditionSourcePath(target)));
+                    }
+                    else if (verb.Equals("Mariposa"))
+                    {
+                        string modeid = takeArg("mode identifier");
+                        var mariposa_args = new ArraySegment<string>(args, argi, args.Length - argi);
+                        argi = args.Length;
+                        verbs.Add(new MariposaVerb(conditionSourcePath(target), modeid, mariposa_args));
+                    }
+                    else if (verb.Equals("BatchMariposa"))
+                    {
+                        verbs.Add(new BatchMariposaVerb(conditionSourcePath(target)));
+                    }
+                    else if (verb.Equals("BatchLabeled"))
+                    {
+                        verbs.Add(new BatchLabeledMariposaVerb(conditionSourcePath(target)));
+                    }
+                    else if (verb.Equals("BatchGetCore"))
+                    {
+                        verbs.Add(new BatchGetCoreMariposaVerb(conditionSourcePath(target)));
+                    }
+                    else if (verb.Equals("BatchCore"))
+                    {
+                        verbs.Add(new BatchCoreMariposaVerb(conditionSourcePath(target)));
+                    }
+                    else if (verb.Equals("BatchTreeShake"))
+                    {
+                        verbs.Add(new BatchTreeShakeMariposaVerb(conditionSourcePath(target)));
+                    }
+                    else if (verb.Equals("BatchTreeShakeFS"))
+                    {
+                        verbs.Add(new BatchTreeShakeFSMariposaVerb(conditionSourcePath(target)));
+                    }
+                    else if (verb.Equals("MariposaLabeled"))
+                    {
+                        verbs.Add(new MariposaLabeledVerb(conditionSourcePath(target)));
+                    }
+                    else if (verb.Equals("MariposaGetCore"))
+                    {
+                        verbs.Add(new MariposaGetCoreVerb(conditionSourcePath(target)));
+                    }
                     else
                     {
                         usage("Unknown verb " + verb);

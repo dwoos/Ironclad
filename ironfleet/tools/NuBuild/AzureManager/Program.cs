@@ -23,19 +23,19 @@ namespace AzureManager
         /// <summary>
         /// Name of our service (hard-wired).
         /// </summary>
-        private const string NuBuildServiceName = "NuBuildExecutionService";
+        private const string NuBuildServiceName = "MariposaNuBuildExecutionService";
 
         /// <summary>
         /// Name of the deployment package blob we use for the "start" and
         /// "upload" commands (hard-wired).
         /// </summary>
-        private const string NuBuildServicePackageName = "NuBuildExecutionEngine";
+        private const string NuBuildServicePackageName = "MariposaNuBuildExecutionEngine";
 
         /// <summary>
         /// Default package file name used by "deploy" and "upload" commands.
         /// Can be overridden by command line argument.
         /// </summary>
-        private const string DefaultPackageFilename = "NuBuildExecutionService.cspkg";
+        private const string DefaultPackageFilename = "MariposaNuBuildExecutionService.cspkg";
 
         /// <summary>
         /// Default configuration file name used by the "deploy" command

@@ -158,7 +158,21 @@ namespace NuBuild
             byte[] contents)
         {
             CloudBlockBlob cloudBlob = this.cloudContainers[(int)container].GetBlockBlobReference(itemHash);
-            cloudBlob.UploadFromByteArray(contents, 0, contents.Length);
+            int tries = 10;
+            StorageException err = null;
+            while (tries > 0)
+            {
+                try
+                {
+                    cloudBlob.UploadFromByteArray(contents, 0, contents.Length);
+                    return;
+                }
+                catch (StorageException e)
+                {
+                    err = e;
+                }
+            }
+            Util.Assert(false);
         }
 
         /// <summary>

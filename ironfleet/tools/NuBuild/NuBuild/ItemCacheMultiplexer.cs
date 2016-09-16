@@ -81,17 +81,22 @@ namespace NuBuild
             string itemHash)
         {
             byte[] contents;
+            ItemCacheContainer localContainer = GetLocalContainer(container);
 
-            contents = this.localCache.FetchItem(container, itemHash);
+            contents = this.localCache.FetchItem(localContainer, itemHash);
             if (contents == null)
             {
                 contents = this.cloudCache.FetchItem(container, itemHash);
+                if (container == ItemCacheContainer.CompressedSources)
+                {
+                    contents = Util.Decompress(contents);
+                }
                 if (contents == null)
                 {
                     return null;
                 }
 
-                this.localCache.StoreItem(container, itemHash, contents);
+                this.localCache.StoreItem(localContainer, itemHash, contents);
             }
             else
             {
@@ -127,9 +132,10 @@ namespace NuBuild
             string itemHash,
             string localFilesystemDestinationPath)
         {
+            ItemCacheContainer localContainer = GetLocalContainer(container);
             try
             {
-                this.localCache.FetchItemToFile(container, itemHash, localFilesystemDestinationPath);
+                this.localCache.FetchItemToFile(localContainer, itemHash, localFilesystemDestinationPath);
 
                 // -
                 // Schedule cloud push on successful local read.
@@ -149,9 +155,13 @@ namespace NuBuild
                 {
                     throw new ObjectMissingFromCacheException(itemHash, "Item missing from multiplexed cache.");
                 }
+                if (container == ItemCacheContainer.CompressedSources)
+                {
+                    temp = Util.Decompress(temp);
+                }
 
-                this.localCache.StoreItem(container, itemHash, temp);
-                this.localCache.FetchItemToFile(container, itemHash, localFilesystemDestinationPath);
+                this.localCache.StoreItem(localContainer, itemHash, temp);
+                this.localCache.FetchItemToFile(localContainer, itemHash, localFilesystemDestinationPath);
             }
         }
 
@@ -170,7 +180,8 @@ namespace NuBuild
             string itemHash,
             byte[] contents)
         {
-            this.localCache.StoreItem(container, itemHash, contents);
+            ItemCacheContainer localContainer = GetLocalContainer(container);
+            this.localCache.StoreItem(localContainer, itemHash, contents);
             this.QueueItemForCloudSync(container, itemHash);
         }
 
@@ -191,7 +202,8 @@ namespace NuBuild
             string itemHash,
             string localFilesystemSourcePath)
         {
-            this.localCache.StoreItemFromFile(container, itemHash, localFilesystemSourcePath);
+            ItemCacheContainer localContainer = GetLocalContainer(container);
+            this.localCache.StoreItemFromFile(localContainer, itemHash, localFilesystemSourcePath);
             this.QueueItemForCloudSync(container, itemHash);
         }
 
@@ -216,7 +228,8 @@ namespace NuBuild
             ItemCacheContainer container,
             string itemHash)
         {
-            this.localCache.DeleteItem(container, itemHash);
+            ItemCacheContainer localContainer = GetLocalContainer(container);
+            this.localCache.DeleteItem(localContainer, itemHash);
             this.cloudCache.DeleteItem(container, itemHash);
         }
 
@@ -249,7 +262,8 @@ namespace NuBuild
             ItemCacheContainer container,
             string itemHash)
         {
-            long size = this.localCache.GetItemSize(container, itemHash);
+            ItemCacheContainer localContainer = GetLocalContainer(container);
+            long size = this.localCache.GetItemSize(localContainer, itemHash);
             if (size == -1)
             {
                 size = this.cloudCache.GetItemSize(container, itemHash);
@@ -272,7 +286,8 @@ namespace NuBuild
             ItemCacheContainer container,
             string itemHash)
         {
-            DateTimeOffset? modifiedTime = this.localCache.GetItemLastModifiedTime(container, itemHash);
+            ItemCacheContainer localContainer = GetLocalContainer(container);
+            DateTimeOffset? modifiedTime = this.localCache.GetItemLastModifiedTime(localContainer, itemHash);
             if (modifiedTime == null)
             {
                 modifiedTime = this.cloudCache.GetItemLastModifiedTime(container, itemHash);
@@ -312,6 +327,15 @@ namespace NuBuild
             }
         }
 
+        private ItemCacheContainer GetLocalContainer(ItemCacheContainer container)
+        {
+            if (container == ItemCacheContainer.CompressedSources)
+            {
+                return ItemCacheContainer.Sources;
+            }
+            return container;
+        }
+
         /// <summary>
         /// Check if the given item is already present in the cloud cache,
         /// and if not, upload the local cache item to the cloud.
@@ -325,16 +349,17 @@ namespace NuBuild
             object itemHashObject)
         {
             ItemCacheContainer container = (ItemCacheContainer)containerObject;
+            ItemCacheContainer localContainer = GetLocalContainer(container);
             string itemHash = (string)itemHashObject;
-
-            if (this.localCache.GetItemSize(container, itemHash) > MaxUploadSizeThreshold)
+            /*
+            if (this.localCache.GetItemSize(localContainer, itemHash) > MaxUploadSizeThreshold && container != ItemCacheContainer.CompressedSources)
             {
                 Logger.WriteLine(string.Format(
                     "Warning: skipping upload of {0} because it's really big. Compress?",
                     itemHash));
                 return;
             }
-
+            */
             // -
             // Check if the item is already present in the cloud cache.
             // TODO present doesn't mean we don't want to overwrite it (eg when
@@ -348,7 +373,11 @@ namespace NuBuild
             // -
             // The item is missing from the cloud cache.  Upload it.
             // -
-            byte[] temp = this.localCache.FetchItem(container, itemHash);
+            byte[] temp = this.localCache.FetchItem(localContainer, itemHash);
+            if (container == ItemCacheContainer.CompressedSources)
+            {
+                temp = Util.Compress(temp);
+            }
             if (temp == null)
             {
                 // This should never happen barring a serious logic error.

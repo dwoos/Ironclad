@@ -98,12 +98,16 @@ namespace NuBuild
             {
                 string fileHash = BuildEngine.theEngine.Repository.GetHash(file);
                 Util.Assert(!string.IsNullOrEmpty(fileHash));
-                inputFileMappings.Add(new BuildObjectValuePointer(fileHash, file.getRelativePath()));
+                inputFileMappings.Add(new BuildObjectValuePointer(fileHash, file.getRelativePath(), isCompressed: file.shouldCompress));
 
                 // Ensure that the input files are in the cloud cache.
                 // REVIEW: best way to determine this is a source file?
                 ItemCacheContainer container;
-                if (file is SourcePath)
+                if (file.shouldCompress)
+                {
+                    container = ItemCacheContainer.CompressedSources;
+                }
+                else if (file is SourcePath)
                 {
                     container = ItemCacheContainer.Sources;
                 }
